@@ -1,4 +1,6 @@
 import cv2
+import re
+import json
 import numpy as np
 from PIL import Image
 from scipy.ndimage import generic_filter
@@ -56,3 +58,28 @@ def preprocess_for_ocr(pil_image: Image.Image) -> np.ndarray:
     denoised = remove_surrounded_black_pixels(binary)
 
     return denoised
+
+def extract_json_from_response(response: str) -> dict:
+    """
+    Remove thinking strings
+
+    Args:
+        response (str): Answer from the LLM model.
+    
+    Returns:
+        dict: JSON from the original answer.
+    """
+
+    cleaned = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+
+    # Busca o primeiro bloco JSON
+    match = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            print("Invalid JSON")
+            return {}
+    else:
+        print("No JSON found")
+        return {}
