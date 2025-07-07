@@ -3,7 +3,9 @@ import faiss
 import json
 import numpy as np
 import requests
+import time
 from sentence_transformers import SentenceTransformer
+from .utils import extract_json_from_response
 
 def load_index(index_dir="data/faiss_index"):
     index = faiss.read_index(f"{index_dir}/index.faiss")
@@ -28,11 +30,42 @@ def search_similar_docs(query_text, k=3):
     return results
 
 def build_prompt(context_docs, query_text):
-    prompt = "You are an assistent that classifies documents using its content. Here are some documents and their classes:\n\n"
+    prompt = """
+    You are an expert document classification and information extraction assistant.
+
+    Your task is to analyze the following text extracted from a scanned document via OCR. Based on this content, do the following:
+
+    1. Determine the type of document (e.g., Invoice, Receipt, Contract, etc).
+    2. Provide a confidence score between 0 and 1 (e.g., 0.85 for 85%).
+    3. Extract relevant entities from the document, depending on its type.
+
+    Your output must strictly follow the JSON format below:
+
+    
+    ❌ DO NOT do this:
+    <think>
+    Analyzing the text...
+    </think>
+
+    ✅ INSTEAD, only do this:
+    {
+    "document_type": "Invoice",
+    "confidence": 0.92,
+    "entities": {
+        "key1": "value1",
+        "key2": "value2",
+    }
+    }
+
+    The "entities" field should contain only meaningful information relevant to the document type.
+    Do not add explanations or additional text outside the JSON structure.
+    Here are some classified documents to help you
+    """
+
     for i, doc in enumerate(context_docs):
         prompt += f"Document {i+1}:\n{doc['text']}\nClass: {doc['label']}\n\n"
     
-    prompt += f"Now, classify this document and answer only with its class:\n{query_text}\n"
+    prompt += f"Here is the OCR text: \n{query_text}\n"
     return prompt
 
 def generate_with_qwen(prompt, model="qwen3:4b"):
@@ -55,6 +88,17 @@ def generate_with_qwen(prompt, model="qwen3:4b"):
     return response.json()["response"].strip()
 
 def classify_text(text: str) -> str:
+    start_time = time.time()
+
     context = search_similar_docs(text, k=3)
     prompt = build_prompt(context, text)
-    return generate_with_qwen(prompt)
+
+    answer = generate_with_qwen(prompt)
+    json_answer = extract_json_from_response(answer)
+
+    end_time = time.time()
+    processing_time = round(end_time - start_time, 3)
+
+    json_answer['processing_time'] = processing_time
+
+    return json_answer
