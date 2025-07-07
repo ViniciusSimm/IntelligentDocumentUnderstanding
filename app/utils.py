@@ -1,24 +1,58 @@
-from PIL import Image, ImageOps
-import numpy as np
 import cv2
+import numpy as np
+from PIL import Image
+from scipy.ndimage import generic_filter
 
-def preprocess_pil_image(image: Image.Image) -> Image.Image:
-    # 1. Converter para escala de cinza
-    gray = image.convert('L')
+def binarize_image(gray: np.ndarray) -> np.ndarray:
+    """
+    Binarize image
     
-    # 2. Aumentar contraste suavemente
-    contrasted = ImageOps.autocontrast(gray, cutoff=2)
+    Args:
+        gray (np.ndarray): Gray image
+
+    Returns:
+        np.ndarray: Binarized image.
+    """
+
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return binary
+
+def remove_surrounded_black_pixels(image: np.ndarray) -> np.ndarray:
+    """
+    Check nearby pixels to eliminate outliers
+
+    Args:
+        image (np.ndarray): Image with noise
     
-    # 3. Converter para numpy array
-    np_img = np.array(contrasted)
-    
-    # 4. Binarização global simples (Otsu)
-    _, binarized = cv2.threshold(np_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    
-    # 5. (Opcional) Pequena morfologia para limpar pontos (não dilatar!)
-    kernel = np.ones((1,1), np.uint8)
-    cleaned = cv2.morphologyEx(binarized, cv2.MORPH_OPEN, kernel)
-    
-    # 6. Converter de volta para PIL Image
-    processed_image = Image.fromarray(cleaned)
-    return processed_image
+    Returns:
+        np.ndarray: Image without isolated black pixels.
+    """
+
+    def filtro(neigh):
+        center = neigh[len(neigh) // 2]
+        if center == 0:
+            vizinhos_sem_centro = np.delete(neigh, len(neigh) // 2)
+            if np.all(vizinhos_sem_centro == 255):
+                return 255
+        return center
+
+    filtrada = generic_filter(image, filtro, size=7, mode='constant', cval=255)
+    return filtrada.astype(np.uint8)
+
+def preprocess_for_ocr(pil_image: Image.Image) -> np.ndarray:
+    """
+    Apply simple preprocessing for images
+
+    Args:
+        pil_image (np.ndarray): Image provided without treatment
+
+    Returns:
+        np.ndarray: Image with simple processing applied.
+    """
+
+    image = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    binary = binarize_image(gray)
+    denoised = remove_surrounded_black_pixels(binary)
+
+    return denoised
