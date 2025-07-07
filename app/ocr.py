@@ -6,9 +6,9 @@ import pytesseract
 from pathlib import Path
 import pytesseract
 import json
-from .utils import preprocess_pil_image
+from .utils import preprocess_for_ocr
 
-def extract_text_from_upload_file(file_bytes: bytes, content_type: Literal["application/pdf", "image/jpeg", "image/png", "image/tiff"]) -> str:
+def extract_text_from_upload_file(file_bytes: bytes, content_type: Literal["application/pdf", "image/jpeg", "image/png", "image/tiff"], apply_preprocessing: bool) -> str:
     """
     Extract text from uploaded file (image or PDF) using Tesseract OCR.
 
@@ -27,12 +27,16 @@ def extract_text_from_upload_file(file_bytes: bytes, content_type: Literal["appl
         images = convert_from_bytes(file_bytes)
         texts = []
         for img in images:
+            if apply_preprocessing:
+                img = preprocess_for_ocr(img)
             text = pytesseract.image_to_string(img, config=custom_config)
             texts.append(text.strip())
         return "\n\n".join(texts)
 
     elif content_type.startswith("image/"):
         image = Image.open(BytesIO(file_bytes)).convert("RGB")
+        if apply_preprocessing:
+            image = preprocess_for_ocr(image)
         text = pytesseract.image_to_string(image)
         return text.strip()
 
