@@ -1,0 +1,6 @@
+images/
+.vscode/
+*.ipynb
+__pycache__/
+*.pyc
+.env

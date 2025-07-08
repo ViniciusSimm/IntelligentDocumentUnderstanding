@@ -2,6 +2,7 @@
 import faiss
 import json
 import numpy as np
+import os
 import requests
 import time
 from sentence_transformers import SentenceTransformer
@@ -80,8 +81,12 @@ def generate_with_qwen(prompt, model="qwen3:4b"):
         str: The generated response from the model.
     """
 
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+    url = f"{OLLAMA_BASE_URL}/api/generate"
+
+
     response = requests.post(
-        "http://localhost:11434/api/generate",
+        url,
         json={"model": model, "prompt": prompt, "stream": False}
     )
     response.raise_for_status()
