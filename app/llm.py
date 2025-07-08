@@ -81,7 +81,7 @@ def generate_with_qwen(prompt, model="qwen3:4b"):
         str: The generated response from the model.
     """
 
-    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     url = f"{OLLAMA_BASE_URL}/api/generate"
 
 
