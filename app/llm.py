@@ -9,6 +9,18 @@ from sentence_transformers import SentenceTransformer
 from .utils import extract_json_from_response
 
 def load_index(index_dir="data/faiss_index"):
+    """
+    Loads the FAISS index from the specified directory.
+
+    Args:
+        index_dir (str): Directory containing the FAISS index.
+    
+    Returns:
+        index (faiss.Index): The FAISS index object.
+        labels (list): List of labels corresponding to the documents.
+        docs (list): List of dictionaries containing document information.
+    """
+
     index = faiss.read_index(f"{index_dir}/index.faiss")
     with open(f"{index_dir}/labels.json", encoding="utf-8") as f:
         labels = json.load(f)
@@ -17,6 +29,17 @@ def load_index(index_dir="data/faiss_index"):
     return index, labels, docs
 
 def search_similar_docs(query_text, k=3):
+    """
+    Searches for similar documents based on the provided query text.
+
+    Args:
+        query_text (str): The text to search for similar documents.
+        k (int): The number of similar documents to retrieve.
+    
+    Returns:
+        list: List of dictionaries containing information about the retrieved documents.
+    """
+
     index, labels, docs = load_index()
     model = SentenceTransformer("all-MiniLM-L6-v2")
     embedding = model.encode([query_text])
@@ -31,6 +54,17 @@ def search_similar_docs(query_text, k=3):
     return results
 
 def build_prompt(context_docs, query_text):
+    """
+    Build the prompt to feed the LLM model.
+
+    Args:
+        context_docs (list): List of similar documents.
+        query_text (str): The text to classify.
+    
+    Returns:
+        string: The prompt to feed the LLM model.
+    """
+
     prompt = """
     You are an expert document classification and information extraction assistant.
 
@@ -93,6 +127,16 @@ def generate_with_qwen(prompt, model="qwen3:4b"):
     return response.json()["response"].strip()
 
 def classify_text(text: str) -> str:
+    """
+    Classifies the given text using a pre-trained language model and provides relevant information.
+
+    Args:
+        text (str): The input text to be classified.
+    
+    Returns:
+        str: A JSON string containing the classification, confidence score, extracted entities, and processing time.
+    """
+
     start_time = time.time()
 
     context = search_similar_docs(text, k=3)
