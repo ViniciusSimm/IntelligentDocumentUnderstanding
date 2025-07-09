@@ -17,8 +17,8 @@ To run this project, you need to have Docker and Docker Compose installed.
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/ViniciusSimm/RecommendationEmbeddings.git
-    cd RecommendationEmbeddings
+    git clone https://github.com/ViniciusSimm/IntelligentDocumentUnderstanding.git
+    cd IntelligentDocumentUnderstanding
     ```
 
 2.  **Build and run the containers**:
