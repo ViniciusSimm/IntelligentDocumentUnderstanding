@@ -17,8 +17,8 @@ To run this project, you need to have Docker and Docker Compose installed.
 
 1.  **Clone the repository**:
     ```bash
-    git clone <repository-url>
-    cd <repository-folder>
+    git clone https://github.com/ViniciusSimm/RecommendationEmbeddings.git
+    cd RecommendationEmbeddings
     ```
 
 2.  **Build and run the containers**:
@@ -49,3 +49,24 @@ curl -X POST -F "file=@/path/to/your/document.png" "http://localhost:8000/extrac
 You can also access the API using a browser by accessing the following link and pressing the "Try it out" button: http://localhost:8000/docs
 
 The response will be a JSON object with the classification of the document.
+
+## Examples
+
+### Email
+
+**Input:**
+![Email Input](examples/email_input.png)
+
+**Output:**
+![Email Output](examples/email_output.png)
+
+### Letter
+
+**Input:**
+![Letter Input](examples/letter_input.png)
+
+**Output:**
+![Letter Output](examples/letter_output.png)
+
+---
+**Note on Data Source:** The dataset utilized for the generation of Retrieval-Augmented Generation (RAG) documentation was sourced from: [https://www.kaggle.com/datasets/shaz13/real-world-documents-collections](https://www.kaggle.com/datasets/shaz13/real-world-documents-collections)
